@@ -1,34 +1,39 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import System.Environment (getArgs)
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as B8
+import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
+import Data.Monoid ((<>))
 import Text.Regex.TDFA ((=~))
 
 main :: IO ()
 main = do
-  fileIn:_ <- getArgs
-  content <- B.readFile fileIn
+  fileIn <- fmap (T.pack . head) getArgs
+  content <- TIO.readFile (T.unpack fileIn)
   let output = replacePrinter content
   -- let (pre, _, post) = fileIn =~ "/MAD/"
-  -- let fileOut = pre ++ "/MVP/" ++ post
+  -- let fileOut = pre <> "/MVP/" <> post
   let fileOut = renamePath fileIn
-  putStrLn "test"
+  TIO.writeFile (T.unpack fileOut) output
 
-replacePrinter :: B.ByteString -> B.ByteString
-replacePrinter = B8.unlines . replacePrinter' . B8.lines
+replacePrinter :: T.Text -> T.Text
+replacePrinter = T.unlines . replacePrinter' . T.lines
 
 replacePrinter' [] = []
 replacePrinter' (x:xs) = (replacePrinterLine x) : (replacePrinter' xs)
 
-renamePath :: String -> String
-renamePath path = reassemble $ path =~ "/MAD/"
+renamePath :: T.Text -> T.Text
+renamePath path = reassemble $ path =~ (T.pack "\\\\MAD\\\\")
   where
+    reassemble :: (T.Text, T.Text, T.Text) -> T.Text
     reassemble (p, "", _) = p
-    reassemble (pre, _, post) = pre ++ "/MVP/" ++ post
+    reassemble (pre, _, post) = pre <> (T.pack "\\MVP\\") <> post
 
-replacePrinterLine :: B.ByteString -> B.ByteString
-replacePrinterLine line = substitute $ line =~ (B.pack "^PRINTER ")
+replacePrinterLine :: T.Text -> T.Text
+replacePrinterLine line = substitute $ line =~ (T.pack "^PRINTER ")
   where
+    substitute :: (T.Text, T.Text, T.Text) -> T.Text
     substitute (p, "", "") = p
     substitute _ = "PRINTER \\\\MVPSRV-APP01\\PRT-ETQ-IT"
