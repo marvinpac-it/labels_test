@@ -20,7 +20,7 @@ processFile fileIn = do
   TIO.writeFile fileOut output
 
 renamePath :: FilePath -> FilePath
-renamePath path = reassemble $ path =~ ("\\\\MAD\\\\" :: String)
+renamePath path = reassemble $ path =~ ("\\\\(MAD|MVQ|MVP)\\\\" :: String)
   where
     reassemble :: (String, String, String) -> String
     reassemble (p, "", _) = p
