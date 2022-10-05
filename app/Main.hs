@@ -15,16 +15,9 @@ main = do
 processFile :: FilePath -> IO ()
 processFile fileIn = do
   content <- TIO.readFile fileIn
-  let output = replacePrinter content
+  let output = replaceLines content
   let fileOut = renamePath fileIn
   TIO.writeFile fileOut output
-
-replacePrinter :: T.Text -> T.Text
-replacePrinter = T.unlines . replacePrinter' . T.lines
-
-replacePrinter' :: [T.Text] -> [T.Text]
-replacePrinter' [] = []
-replacePrinter' (x:xs) = (replacePrinterLine x) : (replacePrinter' xs)
 
 renamePath :: FilePath -> FilePath
 renamePath path = reassemble $ path =~ ("\\\\MAD\\\\" :: String)
@@ -33,9 +26,19 @@ renamePath path = reassemble $ path =~ ("\\\\MAD\\\\" :: String)
     reassemble (p, "", _) = p
     reassemble (pre, _, post) = pre <> "\\MVP\\" <> post
 
+replaceLines :: T.Text -> T.Text
+replaceLines = T.unlines . map (replacePrinterLine . replaceCountLine) . T.lines
+
 replacePrinterLine :: T.Text -> T.Text
-replacePrinterLine line = substitute $ line =~ (T.pack "^PRINTER ")
+replacePrinterLine line = substitutePrinter $ line =~ (T.pack "^PRINTER ")
   where
-    substitute :: (T.Text, T.Text, T.Text) -> T.Text
-    substitute (p, "", "") = p
-    substitute _ = "PRINTER \\\\MVPSRV-APP01\\PRT-ETQ-IT"
+    substitutePrinter :: (T.Text, T.Text, T.Text) -> T.Text
+    substitutePrinter (p, "", "") = p
+    substitutePrinter _ = "PRINTER \\\\MVPSRV-APP01\\PRT-ETQ-IT"
+
+replaceCountLine :: T.Text -> T.Text
+replaceCountLine line = substituteCount $ line =~ (T.pack "^PRINT [0-9]+$")
+  where
+    substituteCount :: (T.Text, T.Text, T.Text) -> T.Text
+    substituteCount (p, "", "") = p
+    substituteCount _ = "PRINT 1"
