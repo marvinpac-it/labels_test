@@ -27,18 +27,15 @@ renamePath path = reassemble $ path =~ ("\\\\MAD\\\\" :: String)
     reassemble (pre, _, post) = pre <> "\\MVP\\" <> post
 
 replaceLines :: T.Text -> T.Text
-replaceLines = T.unlines . map (replacePrinterLine . replaceCountLine) . T.lines
+replaceLines = T.unlines 
+  . map (
+      replaceLine "^PRINTER " "PRINTER \\\\MVPSRV-APP01\\PRT-ETQ-IT"
+      . replaceLine "^PRINT [0-9]+$" "PRINT 1"
+  ) . T.lines
 
-replacePrinterLine :: T.Text -> T.Text
-replacePrinterLine line = substitutePrinter $ line =~ (T.pack "^PRINTER ")
-  where
-    substitutePrinter :: (T.Text, T.Text, T.Text) -> T.Text
-    substitutePrinter (p, "", "") = p
-    substitutePrinter _ = "PRINTER \\\\MVPSRV-APP01\\PRT-ETQ-IT"
-
-replaceCountLine :: T.Text -> T.Text
-replaceCountLine line = substituteCount $ line =~ (T.pack "^PRINT [0-9]+$")
+replaceLine :: T.Text -> T.Text -> T.Text -> T.Text
+replaceLine match replacement line = substituteCount $ line =~ match
   where
     substituteCount :: (T.Text, T.Text, T.Text) -> T.Text
     substituteCount (p, "", "") = p
-    substituteCount _ = "PRINT 1"
+    substituteCount _ = replacement
