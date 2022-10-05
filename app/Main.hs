@@ -9,7 +9,11 @@ import Text.Regex.TDFA ((=~))
 
 main :: IO ()
 main = do
-  fileIn <- fmap head getArgs
+  filesIn <- getArgs
+  mapM_ processFile filesIn
+
+processFile :: FilePath -> IO ()
+processFile fileIn = do
   content <- TIO.readFile fileIn
   let output = replacePrinter content
   let fileOut = renamePath fileIn
