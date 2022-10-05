@@ -34,8 +34,8 @@ replaceLines = T.unlines
   ) . T.lines
 
 replaceLine :: T.Text -> T.Text -> T.Text -> T.Text
-replaceLine match replacement line = substituteCount $ line =~ match
+replaceLine match replacement line = replaceIfMatch $ line =~ match
   where
-    substituteCount :: (T.Text, T.Text, T.Text) -> T.Text
-    substituteCount (p, "", "") = p
-    substituteCount _ = replacement
+    replaceIfMatch :: (T.Text, T.Text, T.Text) -> T.Text
+    replaceIfMatch (p, "", "") = p
+    replaceIfMatch _ = replacement
